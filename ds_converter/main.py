@@ -3,34 +3,62 @@ import fiftyone.types as fot
 from fiftyone.core.view import DatasetView
 import argparse
 
-from .config import load_config
-from .schemas import Dataset
+from ds_converter.config import load_config
+from ds_converter.schemas import Dataset
+from ds_converter.custom_loader import registry
+from ds_converter.exception import DatasetTypeError
+
+def build_dataset_import(dataset_type: str, **kwargs):
+    if hasattr(fot, dataset_type):
+        dataset: fot.Dataset = getattr(fot, dataset_type)()
+        dataset_importer = dataset.get_dataset_importer_cls()
+    elif dataset_type in registry:
+        dataset_importer = registry.get(dataset_type)
+    else:
+        raise DatasetTypeError(f"{dataset_type} is not supported in fiftyone and not existed in registry")
+    return dataset_importer(**kwargs)
+
+def build_dataset_export(dataset_type: str, **kwargs):
+    dataset: fot.Dataset = getattr(fot, dataset_type)()
+    dataset_exporter = dataset.get_dataset_exporter_cls()    
+    return dataset_exporter(**kwargs)
+
 
 def build_dataset(config: Dataset):
-    dataset = fo.Dataset(name=config.name_dataset)
+    dataset = fo.Dataset(name=config.name)
     dataset.tags = []
     for args in config.DatasetImport:
-        dataset_type = getattr(fot, args.dataset_type)
-        dataset.add_dir(
-            dataset_type=dataset_type,
-            **args.model_dump(exclude="dataset_type")
+        dataset_importer = build_dataset_import(
+            dataset_type=args.dataset_type,
+            **args.importer_args
         )
-        if args.tags is not None:
-            dataset.tags.append(args.tags)
+        
+        dataset.add_importer(
+            dataset_importer=dataset_importer,
+            **args.add_import_args.model_dump()
+        )
     
     return dataset
 
-def export_dataset(dataset, config: Dataset):
+def export_dataset(dataset: fo.Dataset, config: Dataset):
     for args in config.DatasetExport:
-        dataset_type = getattr(fot, args.dataset_type)
-        view: DatasetView = dataset.match_tags(args.tags)
-        excluded = ['dataset_type', 'tags']
-        if hasattr(args, 'classes'):
-            if args.classes == 'default':
-                args.classes = dataset.default_classes
+        view: DatasetView = dataset.match_tags(args.split)
+        classes = args.exporter_args.get('classes', None)
+        if classes is None:
+            classes = dataset.distinct("ground_truth.detections.label")
+        elif classes == 'default':
+            if len(dataset.default_classes) == 0:
+                classes = dataset.distinct("ground_truth.detections.label")
+            else:
+                classes = dataset.default_classes
+        args.exporter_args.update({'classes': classes})
+        dataset_exporter = build_dataset_export(
+            args.dataset_type,
+            **args.exporter_args
+        )
         view.export(
-            dataset_type=dataset_type,
-            **args.model_dump(exclude=excluded)
+            dataset_exporter=dataset_exporter,
+            **args.extra_export_args.model_dump()
         )
 
 def run():

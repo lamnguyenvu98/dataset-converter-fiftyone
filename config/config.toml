@@ -1,0 +1,58 @@
+name = "coco-2017"
+
+# Dataset Import
+# Train split
+[[DatasetImport]]
+dataset_type = 'CustomVOCImporter'
+
+[DatasetImport.importer_args]
+dataset_dir = '/home/pep/Datasets/VOCdevkit/VOC2012/'
+data_path = 'JPEGImages'
+labels_path = 'Annotations'
+split_file = '/home/pep/Datasets/VOCdevkit/VOC2012/ImageSets/Main/train.txt'
+max_samples = 200
+# label_types = 'detections'
+
+# Extra args for train split
+[DatasetImport.add_import_args]
+tags = 'train'
+
+# Val split
+[[DatasetImport]]
+dataset_type = 'CustomVOCImporter'
+
+[DatasetImport.importer_args]
+dataset_dir = '/home/pep/Datasets/VOCdevkit/VOC2012/'
+data_path = 'JPEGImages'
+labels_path = 'Annotations'
+split_file = '/home/pep/Datasets/VOCdevkit/VOC2012/ImageSets/Main/val.txt'
+max_samples = 100
+# label_types = 'detections'
+
+[DatasetImport.add_import_args]
+tags = 'val'
+
+# Export Dataset
+# Train split
+[[DatasetExport]]
+dataset_type = 'YOLOv5Dataset'
+split = "train"
+
+[DatasetExport.exporter_args]
+export_dir = '/home/pep/Datasets/Coco2017/voc-yolo-test-samp'
+yaml_path = "dataset.yaml"
+split = "train"
+
+[DatasetExport.extra_export_args]
+
+# Val split
+[[DatasetExport]]
+dataset_type = 'YOLOv5Dataset'
+split = "val"
+
+[DatasetExport.exporter_args]
+export_dir = '/home/pep/Datasets/Coco2017/voc-yolo-test-samp'
+yaml_path = "dataset.yaml"
+split = "val"
+
+[DatasetExport.extra_export_args]
