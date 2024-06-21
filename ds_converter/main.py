@@ -5,7 +5,7 @@ import argparse
 
 from ds_converter.config import load_config
 from ds_converter.schemas import Dataset
-from ds_converter.registry_dataset import Registry
+from ds_converter.datasets.registry_dataset import Registry
 from ds_converter.exception import DatasetTypeError
 
 def build_dataset_import(dataset_type: str, **kwargs):
@@ -49,7 +49,7 @@ def build_dataset(config: Dataset):
 
 def export_dataset(dataset: fo.Dataset, config: Dataset):
     for args in config.DatasetExport:
-        view: DatasetView = dataset.match_tags(args.split)
+        view: DatasetView = dataset.match_tags(args.match_tags)
         classes = args.exporter_args.get('classes', None)
         if classes is None:
             classes = dataset.distinct("ground_truth.detections.label")

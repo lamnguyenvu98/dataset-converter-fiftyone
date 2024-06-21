@@ -4,7 +4,7 @@ import fiftyone.types as fot
 import inspect
 
 from ds_converter.exception import DatasetTypeError
-from ds_converter.custom_loader import registry
+from ds_converter.datasets import Registry
 
 class DatasetAddImportInfo(BaseModel):
     label_field: Optional[Any] = None
@@ -26,8 +26,11 @@ class DatasetImporter(BaseModel):
         if hasattr(fot, dataset_type_name):
             dataset: fot.Dataset = getattr(fot, dataset_type_name)()
             dataset_importer = dataset.get_dataset_importer_cls()
-        elif dataset_type_name in registry:
-            dataset_importer = registry.get(dataset_type_name)
+        elif dataset_type_name in Registry._registry['importer']:
+            dataset_importer = Registry.get_instance(
+                type='importer',
+                dataset_type=dataset_type_name
+            )
         else:
             raise DatasetTypeError(f"{dataset_type_name} is not supported in fiftyone. Follow below link to see all dataset types: https://docs.voxel51.com/user_guide/dataset_creation/datasets.html#supported-formats")
         spec = inspect.getfullargspec(dataset_importer)
@@ -39,7 +42,7 @@ class DatasetImporter(BaseModel):
     @field_validator('dataset_type', mode="before")
     @classmethod
     def check_dataset_type_fiftyone(cls, value):
-        if not hasattr(fot, value) and value not in registry:
+        if not hasattr(fot, value) and value not in Registry._registry['importer']:
             raise DatasetTypeError(f"{value} is not supported in fiftyone. Follow below link to see all dataset types: https://docs.voxel51.com/user_guide/dataset_creation/datasets.html#supported-formats")
         return value
 
@@ -51,15 +54,24 @@ class DatasetExtraExportInfo(BaseModel):
 
 class DatasetExporter(BaseModel):
     dataset_type: str
-    split: Optional[str] = None
+    match_tags: Optional[str] = None
     exporter_args: dict = Field(default_factory=dict)
     extra_export_args: DatasetExtraExportInfo
 
     @model_validator(mode="after")
     def validate_exporter_args(self):
         exporter_args = self.exporter_args
-        dataset: fot.Dataset = getattr(fot, self.dataset_type)()
-        dataset_export = dataset.get_dataset_exporter_cls()
+        dataset_type_name = self.dataset_type
+        if hasattr(fot, dataset_type_name):
+            dataset: fot.Dataset = getattr(fot, dataset_type_name)()
+            dataset_export = dataset.get_dataset_exporter_cls()
+        elif dataset_type_name in Registry._registry['exporter']:
+            dataset_export = Registry.get_instance(
+                type='exporter',
+                dataset_type=dataset_type_name
+            )
+        else:
+            raise DatasetTypeError(f"{dataset_type_name} is not supported in fiftyone. Follow below link to see all dataset types: https://docs.voxel51.com/user_guide/dataset_creation/datasets.html#supported-formats")
         spec = inspect.getfullargspec(dataset_export)
         for key in exporter_args.keys():
             if key not in spec.args:
@@ -69,7 +81,7 @@ class DatasetExporter(BaseModel):
     @field_validator('dataset_type')
     @classmethod
     def check_dataset_type_fiftyone(cls, value):
-        if not hasattr(fot, value):
+        if not hasattr(fot, value) and value not in Registry._registry['exporter']:
             raise DatasetTypeError(f"{value} is not supported in fiftyone. Follow below link to see all dataset types: https://docs.voxel51.com/user_guide/dataset_creation/datasets.html#supported-formats")
         return value
 
