@@ -47,6 +47,9 @@ class CustomVOCImporter(VOCDetectionDatasetImporter):
         self._num_samples = len(uuids)
     
     def read_split_file(self, file):
+        if self.dataset_dir is not None and not os.path.isabs(file):
+            file = os.path.join(self.dataset_dir, file)
+        
         with open(file, 'r') as f:
             splits = f.readlines()
             splits = [split.strip('\n') for split in splits]
