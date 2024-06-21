@@ -5,22 +5,29 @@ import argparse
 
 from ds_converter.config import load_config
 from ds_converter.schemas import Dataset
-from ds_converter.custom_loader import registry
+from ds_converter.registry_dataset import Registry
 from ds_converter.exception import DatasetTypeError
 
 def build_dataset_import(dataset_type: str, **kwargs):
     if hasattr(fot, dataset_type):
         dataset: fot.Dataset = getattr(fot, dataset_type)()
         dataset_importer = dataset.get_dataset_importer_cls()
-    elif dataset_type in registry:
-        dataset_importer = registry.get(dataset_type)
     else:
-        raise DatasetTypeError(f"{dataset_type} is not supported in fiftyone and not existed in registry")
+        dataset_importer = Registry.get_instance(
+            type='importer',
+            dataset_type=dataset_type
+        )
     return dataset_importer(**kwargs)
 
 def build_dataset_export(dataset_type: str, **kwargs):
-    dataset: fot.Dataset = getattr(fot, dataset_type)()
-    dataset_exporter = dataset.get_dataset_exporter_cls()    
+    if hasattr(fot, dataset_type):
+        dataset: fot.Dataset = getattr(fot, dataset_type)()
+        dataset_exporter = dataset.get_dataset_exporter_cls()
+    else:
+        dataset_exporter = Registry.get_instance(
+            type='exporter',
+            dataset_type=dataset_type
+        )
     return dataset_exporter(**kwargs)
 
 

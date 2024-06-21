@@ -6,8 +6,9 @@ import fiftyone as fo
 from fiftyone.utils.voc import VOCDetectionDatasetImporter
 import fiftyone.core.storage as fos
 
-registry = {}
+from ds_converter.datasets import Registry
 
+@Registry.register(type='importer')
 class CustomVOCImporter(VOCDetectionDatasetImporter):
     def __init__(self, split_file: str, dataset_dir=None, data_path=None, labels_path=None, include_all_data=False, extra_attrs=True, shuffle=False, seed=None, max_samples=None):
         super().__init__(dataset_dir, data_path, labels_path, include_all_data, extra_attrs, shuffle, seed, max_samples)
@@ -51,5 +52,3 @@ class CustomVOCImporter(VOCDetectionDatasetImporter):
             splits = [split.strip('\n') for split in splits]
         
         return splits
-
-registry.update({CustomVOCImporter.__name__: CustomVOCImporter})
