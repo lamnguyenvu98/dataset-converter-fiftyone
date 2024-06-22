@@ -1,52 +1,58 @@
-name_dataset = "pascal-voc"
+name = "voc"
 
+# Dataset Import
 # Train split
 [[DatasetImport]]
-dataset_dir = '/home/pep/Datasets/VOCdevkit/VOC2012/'
-dataset_type = 'VOCDetectionDataset'
+dataset_type = 'CustomVOCImporter'
+
+[DatasetImport.importer_args]
+dataset_dir = '/home/pep/Datasets/Pascal-VOC/VOC2012/'
 data_path = 'JPEGImages'
 labels_path = 'Annotations'
-tags = 'train'
-
-# Extra args for train split
-[DatasetImport.extra_args]
-max_samples = 300
+split_file = 'ImageSets/Main/train.txt'
+# max_samples = 200
 # label_types = 'detections'
 
-# Val split
-# [[DatasetImport]]
-# dataset_dir = '/home/pep/Datasets/Coco2017/coco/'
-# dataset_type = 'COCODetectionDataset'
-# data_path = 'images/val2017'
-# labels_path = 'annotations/instances_val2017.json'
-# tags = 'val'
+# Extra args for train split
+[DatasetImport.add_import_args]
+tags = 'train'
 
-# [DatasetImport.extra_args]
+# Val split
+[[DatasetImport]]
+dataset_type = 'CustomVOCImporter'
+
+[DatasetImport.importer_args]
+dataset_dir = '/home/pep/Datasets/Pascal-VOC/VOC2012/'
+data_path = 'JPEGImages'
+labels_path = 'Annotations'
+split_file = 'ImageSets/Main/val.txt'
 # max_samples = 100
 # label_types = 'detections'
 
+[DatasetImport.add_import_args]
+tags = 'val'
+
+# Export Dataset
+# Train split
 [[DatasetExport]]
-export_dir = '/home/pep/Datasets/Coco2017/voc-yolo-test'
 dataset_type = 'YOLOv5Dataset'
-data_path = ''
-labels_path = ''
-export_media = true
-overwrite = false
-tags = "train"
+match_tags = "train"
 
-[DatasetExport.extra_args]
-split = 'train'
-# classes = 'default'
+[DatasetExport.exporter_args]
+export_dir = '/home/pep/Datasets/Pascal-VOC/voc-yolo'
+yaml_path = "dataset.yaml"
+split = "train"
 
-# [[DatasetExport]]
-# export_dir = '/home/pep/Datasets/Coco2017/coco-yolo-test'
-# dataset_type = 'YOLOv5Dataset'
-# data_path = ''
-# labels_path = ''
-# export_media = true
-# overwrite = false
-# tags = ["val"]
+[DatasetExport.extra_export_args]
 
-# [DatasetExport.extra_args]
-# split = 'val'
-# classes = 'default'
+# Val split
+[[DatasetExport]]
+dataset_type = 'YOLOv5Dataset'
+match_tags = "val"
+
+[DatasetExport.exporter_args]
+export_dir = '/home/pep/Datasets/Pascal-VOC/voc-yolo'
+yaml_path = "dataset.yaml"
+split = "val"
+
+[DatasetExport.extra_export_args]
