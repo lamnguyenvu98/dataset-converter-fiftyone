@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "Dataset-Convert"
-version = "1.0.0"
+version = "1.1.0"
 authors = [
     {name = "Vu Lam Nguyen", email = "lamnguyenvu98@gmail.com"},
 ]
@@ -17,7 +17,8 @@ dependencies = {file = ["requirements.txt"]}
 
 [tool.setuptools]
 packages = [
-    "ds_converter"
+    "ds_converter",
+    "ds_converter.datasets"
 ]
 
 [project.scripts]
